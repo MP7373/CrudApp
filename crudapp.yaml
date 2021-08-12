@@ -27,6 +27,13 @@ spec:
       containers:
         - name: crudapp
           image: mp7373/crudapp
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
           ports:
             - containerPort: 8080
           env:
@@ -62,3 +69,28 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: crudapp
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/issuer: "letsencrypt"
+spec:
+  rules:
+  - host: "kiryuin-satsuki-cluster.martinpayne.dev"
+    http:
+        paths:
+        - path: /crudapp(/|$)(.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: crudapp
+              port:
+                number: 80
+  tls:
+  - hosts:
+    - kiryuin-satsuki-cluster.martinpayne.dev
+    secretName: crudapp-tls
